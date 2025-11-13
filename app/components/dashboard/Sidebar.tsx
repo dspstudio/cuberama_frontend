@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { LayoutDashboard, User, LogOut, Sparkles, Cpu, X } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
+import { PRICING_PLANS_EUR } from '../../constants';
 import Logo from '../Logo';
 import Tooltip from '../Tooltip';
 import ConfirmationModal from './ConfirmationModal';
@@ -93,7 +94,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, isOpen, setIs
                     </Tooltip>
                     <div>
                     <a
-                      href="https://buy.stripe.com/test_6oU8wR5TwdmU0tf8FY33W01"
+                      href={PRICING_PLANS_EUR[1]['stripeLink'] + `&prefilled_email=${user?.email || ''}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full bg-gradient-to-r from-blue-700 to-cyan-800 text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"

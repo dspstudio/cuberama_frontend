@@ -5,6 +5,7 @@ import PatchNotes from './widgets/PatchNotes';
 import { Inbox, Sparkles } from 'lucide-react';
 import { PRICING_PLANS_EUR } from '../../constants';
 import Link from 'next/link';
+import { useAuth } from '../../contexts/AuthContext';
 
 const transactions: { id: number, date: string, description: string, category: string, amount: number, status: string }[] = [
   // { id: 1, date: 'Mar 24, 2024', description: 'Starbucks Coffee', category: 'Food & Drink', amount: -5.75, status: 'Completed' },
@@ -17,8 +18,10 @@ const transactions: { id: number, date: string, description: string, category: s
   // { id: 8, date: 'Mar 18, 2024', description: 'Pending Charge - Uber', category: 'Transport', amount: -12.45, status: 'Pending' },
 ];
 
+
 const TransactionRow: React.FC<{ transaction: typeof transactions[0] }> = ({ transaction }) => {
   const amountColor = transaction.amount > 0 ? 'text-green-400' : 'text-slate-300';
+const { user } = useAuth();
 
   return (
     <tr className="border-b border-white/5 last:border-b-0">
@@ -34,44 +37,48 @@ const TransactionRow: React.FC<{ transaction: typeof transactions[0] }> = ({ tra
   );
 };
 
-const TransactionsSection: React.FC<{ transactions: typeof transactions }> = ({ transactions }) => (
-  <div className="bg-[#161A25] border border-white/5 rounded-2xl flex flex-col">
-    <div className="p-6 border-b border-white/5 flex-shrink-0">
-        <h2 className="text-white font-semibold">Transactions</h2>
+const TransactionsSection: React.FC<{ transactions: typeof transactions }> = ({ transactions }) => {
+  const { user } = useAuth();
+
+  return (
+    <div className="bg-[#161A25] border border-white/5 rounded-2xl flex flex-col">
+      <div className="p-6 border-b border-white/5 flex-shrink-0">
+          <h2 className="text-white font-semibold">Transactions</h2>
+      </div>
+      {transactions.length > 0 ? (
+        <div className="overflow-y-auto">
+            <table className="w-full text-left">
+                <thead>
+                    <tr className="bg-black/10">
+                        <th className="py-3 px-6 text-xs font-semibold uppercase text-slate-400 tracking-wider">Details</th>
+                        <th className="py-3 px-6 text-xs font-semibold uppercase text-slate-400 tracking-wider">Date</th>
+                        <th className="py-3 px-6 text-xs font-semibold uppercase text-slate-400 tracking-wider text-right">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {transactions.map(tx => <TransactionRow key={tx.id} transaction={tx} />)}
+                </tbody>
+            </table>
+        </div>
+      ) : (
+        <div className="flex-grow flex flex-col items-center justify-center text-center p-6">
+            <Inbox className="w-16 h-16 text-slate-500 mb-4" />
+            <h3 className="text-lg font-semibold text-white">No License Yet</h3>
+          <p className="text-sm text-slate-400 mt-1 mb-6 max-w-xs">Once you make a transaction, it will appear here.</p>
+          <Link
+            href={PRICING_PLANS_EUR[1]['stripeLink'] + `&prefilled_email=${user?.email || ''}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full bg-gradient-to-r from-blue-700 to-cyan-800 text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
+          >
+              <Sparkles className="h-5 w-5" />
+              <span>Activate Cuberama Pro</span>
+          </Link>
+        </div>
+      )}
     </div>
-    {transactions.length > 0 ? (
-      <div className="overflow-y-auto">
-          <table className="w-full text-left">
-              <thead>
-                  <tr className="bg-black/10">
-                      <th className="py-3 px-6 text-xs font-semibold uppercase text-slate-400 tracking-wider">Details</th>
-                      <th className="py-3 px-6 text-xs font-semibold uppercase text-slate-400 tracking-wider">Date</th>
-                      <th className="py-3 px-6 text-xs font-semibold uppercase text-slate-400 tracking-wider text-right">Amount</th>
-                  </tr>
-              </thead>
-              <tbody>
-                  {transactions.map(tx => <TransactionRow key={tx.id} transaction={tx} />)}
-              </tbody>
-          </table>
-      </div>
-    ) : (
-      <div className="flex-grow flex flex-col items-center justify-center text-center p-6">
-          <Inbox className="w-16 h-16 text-slate-500 mb-4" />
-          <h3 className="text-lg font-semibold text-white">No License Yet</h3>
-        <p className="text-sm text-slate-400 mt-1 mb-6 max-w-xs">Once you make a transaction, it will appear here.</p>
-        <Link
-          href={PRICING_PLANS_EUR[1]['stripeLink']}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full bg-gradient-to-r from-blue-700 to-cyan-800 text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
-        >
-            <Sparkles className="h-5 w-5" />
-            <span>Activate Cuberama Pro</span>
-        </Link>
-      </div>
-    )}
-  </div>
-);
+  );
+};
 
 const DashboardHome: React.FC = () => {
   return (

@@ -87,6 +87,6 @@ export const PRICING_PLANS_EUR: PricingPlan[] = [
     features: proFeatures,
     cta: 'Start 14-Day Pro Trial',
     isPopular: true,
-    stripeLink: 'https://buy.stripe.com/test_aFaaEZfu6ciQ1xj8FY33W04?prefilled_promo_code=test50', // Note: Links would ideally be different for EUR
+    stripeLink: 'https://buy.stripe.com/test_aFaaEZfu6ciQ1xj8FY33W04?prefilled_promo_code=test50',
   },
 ];

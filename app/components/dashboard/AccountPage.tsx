@@ -1,6 +1,6 @@
 'use client';
 import Image from 'next/image';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react'; // Removed unused useEffect, use
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import { Mail, Camera } from 'lucide-react';
@@ -30,10 +30,17 @@ const getProviderInfo = (provider?: string) => {
 const AccountPage: React.FC = () => {
     const { user, signOut } = useAuth();
     
-    // Profile State
-    const [fullName, setFullName] = useState('');
-    const [nickname, setNickname] = useState('');
-    const [avatarUrl, setAvatarUrl] = useState('');
+    // Destructure user metadata/info once
+    const { full_name, nickname: meta_nickname } = user?.user_metadata || {};
+    const { email } = user || {};
+
+    // Helper for initial nickname calculation
+    const initialNickname = meta_nickname || email?.split('@')[0] || '';
+    
+    // Profile State - INITIALIZED DIRECTLY TO AVOID CASCADE RENDER WARNING
+    const [fullName, setFullName] = useState(full_name || '');
+    const [nickname, setNickname] = useState(initialNickname);
+    const [avatarUrl, setAvatarUrl] = useState(user ? getAvatarUrl(user, 80) : '');
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -52,22 +59,26 @@ const AccountPage: React.FC = () => {
     const [deleteMessage, setDeleteMessage] = useState<{ type: 'error'; text: string } | null>(null);
 
     const providerInfo = getProviderInfo(user?.app_metadata.provider);
-    const { full_name, nickname: meta_nickname } = user?.user_metadata || {};
-    const { email, id } = user || {};
-
+    
+    // ⚠️ REMOVED UNSAFE useEffect ⚠️
+    /*
     useEffect(() => {
+        console.log(user)
         if (user) {
             setFullName(full_name || '');
             setNickname(meta_nickname || email?.split('@')[0] || '');
             setAvatarUrl(getAvatarUrl(user, 80));
         }
     }, [id, full_name, meta_nickname, email, user]);
+    */
 
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         setProfileLoading(true);
         setProfileMessage(null);
 
+        // Note: The avatarUrl state update comes from handleAvatarUpdate, 
+        // which updates the local state and triggers a re-render.
         const { error } = await supabase.auth.updateUser({
             data: { 
                 full_name: fullName,
@@ -132,6 +143,7 @@ const AccountPage: React.FC = () => {
         setDeleteLoading(true);
         setDeleteMessage(null);
 
+        // Assuming 'delete_user' is a Supabase RLS function that handles account deletion
         const { error } = await supabase.rpc('delete_user');
 
         setDeleteLoading(false);
@@ -174,10 +186,10 @@ const AccountPage: React.FC = () => {
                             )}
                             <div className='absolute top-0 h-20 w-20'>
                              <Tooltip text="Change Avatar" position="bottom">
-                                 <button 
+                                <button 
                                     type="button" 
                                     onClick={() => setIsAvatarModalOpen(true)}
-                                    className="h-full absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="h-20 absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
                                     aria-label="Change avatar"
                                 >
                                     <Camera className="w-6 h-6" />
@@ -255,13 +267,13 @@ const AccountPage: React.FC = () => {
                               placeholder="••••••••" 
                             />
                         </div>
-                         {wasNewPasswordFocused && (
-                           <div className="md:col-span-2">
-                               <PasswordStrengthIndicator password={newPassword} />
-                           </div>
+                           {wasNewPasswordFocused && (
+                            <div className="md:col-span-2">
+                                <PasswordStrengthIndicator password={newPassword} />
+                            </div>
                         )}
                     </div>
-                     <div className="mt-6 flex justify-end items-center gap-4">
+                       <div className="mt-6 flex justify-end items-center gap-4">
                         {passwordMessage && (
                             <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
                                 {passwordMessage.text}
@@ -276,7 +288,7 @@ const AccountPage: React.FC = () => {
                     <div className="flex justify-between items-start">
                         <div>
                             <h2 className="text-xl font-semibold text-red-400 mb-2">Danger Zone</h2>
-                             {deleteMessage && (
+                               {deleteMessage && (
                                 <p className="text-sm text-red-400 mb-4">{deleteMessage.text}</p>
                             )}
                         </div>
