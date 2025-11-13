@@ -30,6 +30,14 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
       });
       if (data) {
         userId = data?.user?.id || null;
+        // send supabses reset link for password
+        const { error } = await supabaseAdmin.auth.admin.generateLink({
+          type: 'recovery',
+          email: userEmail!, 
+        });
+        if (error) {
+          console.error('Error generating password reset link:', error);
+        }
       }
       if (createUserError) {
         console.error('Error creating auth user:', createUserError);
@@ -42,7 +50,7 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
     console.error('Could not determine user ID for checkout session.');
     return;
   }
-
+  
   // --- Create an order record ---
   const orderData = {
     id: session.id,
