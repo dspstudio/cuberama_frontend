@@ -31,10 +31,8 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
       if (data) {
         userId = data?.user?.id || null;
         // send supabses reset link for password
-        const { error } = await supabaseAdmin.auth.admin.generateLink({
-          type: 'recovery',
-          email: userEmail!, 
-        });
+        console.log('Generating password reset link...');
+        const { error } = await supabaseAdmin.auth.resetPasswordForEmail(userEmail);
         if (error) {
           console.error('Error generating password reset link:', error);
         }

@@ -19,6 +19,31 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const getSessionAndProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      const currentUser = session?.user;
+      setUser(currentUser ?? null);
+
+      if (currentUser) {
+        // Check for pro status in profiles table
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('pro_status')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile:', error);
+        }
+
+        setIsPro(profile?.pro_status || false);
+      }
+      setLoading(false);
+    };
+
+    getSessionAndProfile();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -36,7 +61,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         setIsPro(false);
       }
-      setLoading(false);
     });
 
     return () => {
