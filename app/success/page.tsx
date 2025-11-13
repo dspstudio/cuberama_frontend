@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function SuccessPage() {
+function SuccessContent() {
   const searchParams = useSearchParams();
   const { user, loading: authLoading } = useAuth();
   const [loginStatus, setLoginStatus] = useState<'idle' | 'checking' | 'ready' | 'error'>('idle');
@@ -113,5 +113,22 @@ export default function SuccessPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="max-w-md p-8 bg-white rounded-lg shadow-md dark:bg-gray-800">
+          <h1 className="text-3xl font-bold text-center text-green-500">Payment Successful!</h1>
+          <p className="mt-4 text-lg text-center text-gray-700 dark:text-gray-300">
+            Loading...
+          </p>
+        </div>
+      </div>
+    }>
+      <SuccessContent />
+    </Suspense>
   );
 }
