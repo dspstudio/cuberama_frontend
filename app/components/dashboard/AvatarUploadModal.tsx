@@ -69,6 +69,7 @@ const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({ isOpen, onClose, 
             onAvatarUpdate(publicUrl);
             onClose();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             setError(err.message || 'Failed to upload avatar.');
         } finally {
@@ -124,9 +125,17 @@ const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({ isOpen, onClose, 
     };
 
     const handleGenerateAvatar = async () => {
-        if (!user) return;
+        if (!user) {
+            setError("You must be logged in to generate an avatar.");
+            return;
+        }
+        if (!user.email) {
+            setError("Your email is not available to generate an avatar.");
+            return;
+        }
         setLoading('Generating...');
-        const newUrl = `https://i.pravatar.cc/150?u=${Date.now()}`;
+        const seed = encodeURIComponent(user.email + Date.now());
+        const newUrl = `https://robohash.org/${seed}.png?size=150x150`;
          const { error } = await supabase.auth.updateUser({
             data: { avatar_url: newUrl }
         });
@@ -165,7 +174,7 @@ const AvatarUploadModal: React.FC<AvatarUploadModalProps> = ({ isOpen, onClose, 
             >
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-bold text-white">Change Avatar</h2>
-                    <Tooltip text="Close" position="bottom" align="end">
+                    <Tooltip text="Close" position="bottom" align="end" className='h-full'>
                         <button onClick={onClose} className="text-gray-400 hover:text-white">
                             <X />
                         </button>

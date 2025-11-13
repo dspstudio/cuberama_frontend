@@ -6,8 +6,9 @@ import { useAuthUI } from '@/app/contexts/AuthUIContext';
 import { useAuth } from '@/app/contexts/AuthContext';
 import Tooltip from './Tooltip';
 import Link from 'next/link'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { getAvatarUrl } from '@/app/lib/utils';
+
 import { usePathname } from 'next/navigation';
 
 import {
@@ -38,7 +39,6 @@ const Header: React.FC<HeaderProps> = ({ onLaunch }) => {
   const authRef = useRef<HTMLDivElement>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeLink, setActiveLink] = useState('');
-  const router = useRouter();
   const pathname = usePathname();
   const observerRef = useRef<IntersectionObserver | null>(null);
   const isScrollingRef = useRef(false);
@@ -67,13 +67,12 @@ const Header: React.FC<HeaderProps> = ({ onLaunch }) => {
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
-    e.preventDefault();
-    isScrollingRef.current = true;
     setActiveLink(targetId);
+    setIsMenuOpen(false);
 
-    if (pathname !== '/') {
-      router.push('/#' + targetId);
-    } else {
+    if (pathname === '/') {
+      e.preventDefault();
+      isScrollingRef.current = true;
       const element = document.getElementById(targetId);
       if (element) {
         element.scrollIntoView({
@@ -81,13 +80,11 @@ const Header: React.FC<HeaderProps> = ({ onLaunch }) => {
           block: 'start'
         });
       }
+      setTimeout(() => {
+        isScrollingRef.current = false;
+      }, 1000);
     }
-    
-    setIsMenuOpen(false);
-
-    setTimeout(() => {
-      isScrollingRef.current = false;
-    }, 1000);
+    // On other pages, let the Link component handle navigation.
   };
 
   const handleAuthPopoverToggle = () => {
@@ -122,7 +119,7 @@ const Header: React.FC<HeaderProps> = ({ onLaunch }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const userAvatarUrl = user?.user_metadata?.avatar_url || `https://i.pravatar.cc/32?u=${user?.id}`;
+  const userAvatarUrl = getAvatarUrl(user, 32);
 
   return (
     <>
@@ -150,7 +147,7 @@ const Header: React.FC<HeaderProps> = ({ onLaunch }) => {
                   className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-cyan-500"
                   aria-label="Go to dashboard"
                 >
-                  <Image src={userAvatarUrl} alt="User Avatar" width={32} height={32} className="rounded-full" />
+                  <Image unoptimized src={userAvatarUrl} alt="User Avatar" width={32} height={32} className="rounded-full" />
                 </button>
               </Tooltip>
             ) : (
@@ -184,7 +181,7 @@ const Header: React.FC<HeaderProps> = ({ onLaunch }) => {
                     className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-cyan-500"
                     aria-label="Go to dashboard"
                   >
-                    <Image src={userAvatarUrl} alt="User Avatar" width={32} height={32} className="rounded-full" />
+                    <Image unoptimized src={userAvatarUrl} alt="User Avatar" width={32} height={32} className="rounded-full" />
                   </button>
                 </Tooltip>
               ) : (
@@ -219,7 +216,7 @@ const Header: React.FC<HeaderProps> = ({ onLaunch }) => {
              <div className="border-t border-white/5 pt-4 flex items-center justify-between">
               {session ? (
                 <div className="flex items-center gap-4">
-                  <Image src={userAvatarUrl} alt="User Avatar" width={32} height={32} className="rounded-full" />
+                  <Image unoptimized src={userAvatarUrl} alt="User Avatar" width={32} height={32} className="rounded-full" />
                   <span className="text-sm font-medium text-white">{user?.email}</span>
                 </div>
               ) : (

@@ -5,9 +5,10 @@ interface TooltipProps {
   text: string;
   position?: 'top' | 'bottom' | 'left' | 'right';
   align?: 'center' | 'start' | 'end';
+  className?: string; // Add className prop
 }
 
-const Tooltip: React.FC<TooltipProps> = ({ children, text, position = 'top', align = 'center' }) => {
+const Tooltip: React.FC<TooltipProps> = ({ children, text, position = 'top', align = 'center', className }) => {
   const [isVisible, setIsVisible] = useState(false);
 
   const positionClasses = {
@@ -32,7 +33,7 @@ const Tooltip: React.FC<TooltipProps> = ({ children, text, position = 'top', ali
 
   return (
     <div 
-      className="relative flex items-center"
+      className={`relative flex items-center ${className || ''}`}
       onMouseEnter={() => setIsVisible(true)}
       onMouseLeave={() => setIsVisible(false)}
       onFocus={() => setIsVisible(true)}

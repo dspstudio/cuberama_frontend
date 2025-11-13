@@ -9,6 +9,7 @@ import AvatarUploadModal from './AvatarUploadModal';
 import ConfirmationModal from './ConfirmationModal';
 import PasswordStrengthIndicator, { isPasswordStrong } from '../PasswordStrengthIndicator';
 import Tooltip from '../Tooltip';
+import { getAvatarUrl } from '@/app/lib/utils';
 
 const getProviderInfo = (provider?: string) => {
     switch (provider) {
@@ -36,7 +37,6 @@ const AccountPage: React.FC = () => {
     const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
     const [profileLoading, setProfileLoading] = useState(false);
     const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-    const [providerInfo, setProviderInfo] = useState<{name: string, Icon: React.ElementType} | null>(null);
 
     // Password State
     const [newPassword, setNewPassword] = useState('');
@@ -51,15 +51,17 @@ const AccountPage: React.FC = () => {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteMessage, setDeleteMessage] = useState<{ type: 'error'; text: string } | null>(null);
 
+    const providerInfo = getProviderInfo(user?.app_metadata.provider);
+    const { full_name, nickname: meta_nickname } = user?.user_metadata || {};
+    const { email, id } = user || {};
 
     useEffect(() => {
         if (user) {
-            setFullName(user.user_metadata?.full_name || '');
-            setNickname(user.user_metadata?.nickname || user.email?.split('@')[0] || '');
-            setAvatarUrl(user.user_metadata?.avatar_url || `https://i.pravatar.cc/80?u=${user.id}`);
-            setProviderInfo(getProviderInfo(user.app_metadata.provider));
+            setFullName(full_name || '');
+            setNickname(meta_nickname || email?.split('@')[0] || '');
+            setAvatarUrl(getAvatarUrl(user, 80));
         }
-    }, [user]);
+    }, [id, full_name, meta_nickname, email, user]);
 
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -164,18 +166,24 @@ const AccountPage: React.FC = () => {
                 <form onSubmit={handleUpdateProfile} className="bg-[#161A25] border border-white/5 rounded-2xl p-6 sm:p-8">
                     <h2 className="text-xl font-semibold text-white mb-6">Profile</h2>
                     <div className="flex flex-col md:flex-row items-start gap-8">
-                        <div className="flex-shrink-0 text-center w-full md:w-auto relative group" key={avatarUrl}>
-                            <Image src={avatarUrl} alt={fullName} width={80} height={80} className="w-20 h-20 rounded-full mx-auto" />
+                        <div className="flex-shrink-0 w-20 h-20 mx-auto md:mx-0 relative group" key={avatarUrl}>
+                            {avatarUrl ? (
+                                <Image unoptimized src={avatarUrl} alt={fullName || 'User avatar'} width={80} height={80} className="w-20 h-20 rounded-full" />
+                            ) : (
+                                <div className="w-20 h-20 rounded-full bg-gray-800 animate-pulse"></div>
+                            )}
+                            <div className='absolute top-0 h-20 w-20'>
                              <Tooltip text="Change Avatar" position="bottom">
                                  <button 
                                     type="button" 
                                     onClick={() => setIsAvatarModalOpen(true)}
-                                    className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="h-full absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
                                     aria-label="Change avatar"
                                 >
                                     <Camera className="w-6 h-6" />
                                 </button>
                             </Tooltip>
+                            </div>
                         </div>
                         <div className="flex-grow w-full grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>

@@ -91,6 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, isOpen, setIs
                             <span className="font-medium text-sm">Logout</span>
                         </button>
                     </Tooltip>
+                    <div>
                     <a
                       href="https://buy.stripe.com/test_6oU8wR5TwdmU0tf8FY33W01"
                       target="_blank"
@@ -100,6 +101,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, isOpen, setIs
                         <Sparkles className="h-5 w-5" />
                         <span>Activate Cuberama Pro</span>
                     </a>
+                    </div>
                     <p className="text-xs text-center text-gray-500 mt-2">Unlock advanced features</p>
                 </div>
             </aside>
