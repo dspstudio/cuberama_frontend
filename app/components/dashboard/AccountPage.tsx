@@ -28,7 +28,7 @@ const getProviderInfo = (provider?: string) => {
 };
 
 const AccountPage: React.FC = () => {
-    const { user, signOut } = useAuth();
+    const { user, signOut, isPro } = useAuth();
     
     // Destructure user metadata/info once
     const { full_name, nickname: meta_nickname } = user?.user_metadata || {};
@@ -60,38 +60,31 @@ const AccountPage: React.FC = () => {
 
     const providerInfo = getProviderInfo(user?.app_metadata.provider);
     
-    // ⚠️ REMOVED UNSAFE useEffect ⚠️
-    /*
-    useEffect(() => {
-        console.log(user)
-        if (user) {
-            setFullName(full_name || '');
-            setNickname(meta_nickname || email?.split('@')[0] || '');
-            setAvatarUrl(getAvatarUrl(user, 80));
-        }
-    }, [id, full_name, meta_nickname, email, user]);
-    */
-
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         setProfileLoading(true);
         setProfileMessage(null);
 
-        // Note: The avatarUrl state update comes from handleAvatarUpdate, 
-        // which updates the local state and triggers a re-render.
-        const { error } = await supabase.auth.updateUser({
-            data: { 
-                full_name: fullName,
-                nickname: nickname
+        try {
+            const { error } = await supabase.auth.updateUser({
+                data: {
+                    full_name: fullName,
+                    nickname: nickname
+                }
+            })
+
+            if (error) {
+                setProfileMessage({ type: 'error', text: error.message });
+            } else {
+                setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
             }
-        });
-
-        setProfileLoading(false);
-
-        if (error) {
-            setProfileMessage({ type: 'error', text: error.message });
-        } else {
-            setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } catch (err: any) {
+            // Catch any unexpected errors during the update process
+            console.error('Error updating profile:', err);
+            setProfileMessage({ type: 'error', text: err.message || 'An unexpected error occurred.' });
+        } finally {
+            setProfileLoading(false); // Ensure loading state is always reset
         }
     };
 
@@ -174,6 +167,15 @@ const AccountPage: React.FC = () => {
             <div className="space-y-12">
                 <h1 className="text-3xl font-bold text-white">Account Settings</h1>
 
+                {/* Subscription Status */}
+                <div className="bg-[#161A25] border border-white/5 rounded-2xl p-6 sm:p-8">
+                    <h2 className="text-xl font-semibold text-white mb-6">Subscription</h2>
+                    <div className="flex items-center">
+                        <p className="text-gray-400">Your current plan:</p>
+                        <p className="ml-2 font-semibold text-white">{isPro ? 'Pro' : 'Free'}</p>
+                    </div>
+                </div>
+                
                 {/* Profile Settings */}
                 <form onSubmit={handleUpdateProfile} className="bg-[#161A25] border border-white/5 rounded-2xl p-6 sm:p-8">
                     <h2 className="text-xl font-semibold text-white mb-6">Profile</h2>

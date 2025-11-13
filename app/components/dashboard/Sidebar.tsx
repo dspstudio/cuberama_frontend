@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { LayoutDashboard, User, LogOut, Sparkles, Cpu, X } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
-import { PRICING_PLANS_EUR } from '../../constants';
+import { PRICING_PLANS_EUR, cuberama3DAppLink } from '../../constants';
 import Logo from '../Logo';
 import Tooltip from '../Tooltip';
 import ConfirmationModal from './ConfirmationModal';
@@ -33,7 +33,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, isOpen, setIsOpen }) => {
-    const { user, signOut } = useAuth();
+    const { user, signOut, isPro } = useAuth();
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
     // Fallback if user is null for some reason
@@ -93,17 +93,29 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, isOpen, setIs
                         </button>
                     </Tooltip>
                     <div>
-                    <a
-                      href={PRICING_PLANS_EUR[1]['stripeLink'] + `&prefilled_email=${user?.email || ''}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full bg-gradient-to-r from-blue-700 to-cyan-800 text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
-                    >
-                        <Sparkles className="h-5 w-5" />
-                        <span>Activate Cuberama Pro</span>
-                    </a>
+                        {isPro ? (
+                            <Link
+                                href={cuberama3DAppLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-gradient-to-r from-blue-700 to-cyan-800 text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
+                            >
+                                <Sparkles className="h-5 w-5" />
+                                <span>Launch Cuberama</span>
+                            </Link>
+                        ) : (
+                            <a
+                                href={PRICING_PLANS_EUR[1]['stripeLink'] + `&prefilled_email=${user?.email || ''}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-gradient-to-r from-blue-700 to-cyan-800 text-white font-semibold py-3 rounded-lg flex items-center justify-center space-x-2 hover:opacity-90 transition-opacity"
+                            >
+                                <Sparkles className="h-5 w-5" />
+                                <span>Activate Cuberama Pro</span>
+                            </a>
+                        )}
                     </div>
-                    <p className="text-xs text-center text-gray-500 mt-2">Unlock advanced features</p>
+                    {!isPro && <p className="text-xs text-center text-gray-500 mt-2">Unlock advanced features</p>}
                 </div>
             </aside>
             

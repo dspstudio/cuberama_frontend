@@ -19,39 +19,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getSessionAndSubscription = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      const currentUser = session?.user;
-      setUser(currentUser ?? null);
-
-      if (currentUser) {
-        // Check for an active subscription
-        const { data: subscription, error } = await supabase
-          .from('subscriptions')
-          .select('status')
-          .eq('user_id', currentUser.id)
-          .in('status', ['trialing', 'active'])
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching subscription:', error);
-        }
-
-        setIsPro(!!subscription);
-      }
-      setLoading(false);
-    };
-
-    getSessionAndSubscription();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      // Reset pro status on auth change, it will be re-checked
-      if (!session) {
+      if (session?.user) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('pro_status')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile on auth change:', error);
+        }
+        setIsPro(profile?.pro_status || false);
+      } else {
         setIsPro(false);
       }
+      setLoading(false);
     });
 
     return () => {
