@@ -28,7 +28,7 @@ const getProviderInfo = (provider?: string) => {
 };
 
 const AccountPage: React.FC = () => {
-    const { user, signOut, isPro } = useAuth();
+    const { user, signOut, isPro, refreshUser } = useAuth();
     
     // Destructure user metadata/info once
     const { full_name, nickname: meta_nickname } = user?.user_metadata || {};
@@ -72,10 +72,11 @@ const AccountPage: React.FC = () => {
                     nickname: nickname
                 }
             })
-
+console.log('test')
             if (error) {
                 setProfileMessage({ type: 'error', text: error.message });
             } else {
+                await refreshUser();
                 setProfileMessage({ type: 'success', text: 'Profile updated successfully!' });
             }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -106,6 +107,7 @@ const AccountPage: React.FC = () => {
         if (error) {
             setPasswordMessage({ type: 'error', text: error.message });
         } else {
+            await refreshUser();
             setPasswordMessage({ type: 'success', text: 'Password updated successfully!' });
             setNewPassword('');
             setConfirmPassword('');

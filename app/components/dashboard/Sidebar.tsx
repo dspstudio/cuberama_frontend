@@ -3,7 +3,6 @@ import { LayoutDashboard, User, LogOut, Sparkles, Cpu, X } from 'lucide-react';
 
 import { useAuth } from '../../contexts/AuthContext';
 import { PRICING_PLANS_EUR, cuberama3DAppLink } from '../../constants';
-import Logo from '../Logo';
 import Tooltip from '../Tooltip';
 import ConfirmationModal from './ConfirmationModal';
 import Link from 'next/link';
@@ -35,6 +34,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, isOpen, setIsOpen }) => {
     const { user, signOut, isPro } = useAuth();
     const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     // Fallback if user is null for some reason
     const userEmail = user?.email || 'user@cuberama.com';
@@ -42,9 +42,17 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, isOpen, setIs
     const userAvatarUrl = user?.user_metadata?.avatar_url || `https://i.pravatar.cc/40?u=${user?.id || userEmail}`;
 
     const handleLogout = async () => {
-        await signOut();
-        setIsLogoutConfirmOpen(false);
-        // The onAuthStateChange listener in AuthContext will handle redirecting.
+        setIsLoggingOut(true);
+        try {
+            await signOut();
+            // The onAuthStateChange listener in AuthContext will handle redirecting.
+        } catch (error) {
+            console.error("Error logging out:", error);
+            // Optionally, show an error message to the user
+        } finally {
+            setIsLoggingOut(false);
+            setIsLogoutConfirmOpen(false);
+        }
     };
 
     const handleNavigate = (page: DashboardPageType) => {
@@ -125,6 +133,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activePage, onNavigate, isOpen, setIs
                 onConfirm={handleLogout}
                 title="Confirm Logout"
                 confirmText="Logout"
+                isLoading={isLoggingOut}
             >
                 <p className="text-sm text-gray-400">
                     Are you sure you want to sign out of your account?

@@ -50,6 +50,7 @@ const AuthPopover: React.FC = () => {
                 if (error) throw error;
                 setMessage('Check your email for a confirmation link!');
             }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             setError(error.message || 'An unexpected error occurred.');
         } finally {
@@ -64,10 +65,11 @@ const AuthPopover: React.FC = () => {
         setMessage(null);
         try {
             const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                redirectTo: window.location.origin,
+                redirectTo: process.env.NODE_ENV === 'production' ? 'https://cuberama.app/update-password/' : 'http://lm.com:3001/update-password/',
             });
             if (error) throw error;
             setMessage('Password reset email sent. Please check your inbox.');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             setError(error.message || 'Failed to send reset email.');
         } finally {
@@ -155,7 +157,7 @@ const AuthPopover: React.FC = () => {
     const renderForgotPasswordForm = () => (
         <form onSubmit={handlePasswordReset}>
              <h3 className="text-center font-semibold text-white mb-2">Reset Your Password</h3>
-             <p className="text-center text-xs text-gray-400 mb-4">Enter your email and we'll send you a link to get back into your account.</p>
+             <p className="text-center text-xs text-gray-400 mb-4">Enter your email and we&apos;ll send you a link to get back into your account.</p>
             <div className="space-y-4">
                 <div>
                     <label htmlFor="reset-email" className="block text-xs font-medium text-gray-400 mb-1">Email</label>

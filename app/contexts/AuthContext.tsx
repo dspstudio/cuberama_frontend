@@ -8,6 +8,7 @@ interface AuthContextType {
   isPro: boolean; // New state for pro status
   loading: boolean;
   signOut: () => Promise<{ error: AuthError | null }>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,33 +19,41 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isPro, setIsPro] = useState(false); // Initialize pro status
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    const currentUser = session?.user;
+    setUser(currentUser ?? null);
+
+    if (currentUser) {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('pro_status')
+        .eq('id', currentUser.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+      }
+
+      setIsPro(profile?.pro_status || false);
+    } else {
+      setIsPro(false);
+    }
+  };
+
   useEffect(() => {
     const getSessionAndProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      const currentUser = session?.user;
-      setUser(currentUser ?? null);
-
-      if (currentUser) {
-        // Check for pro status in profiles table
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('pro_status')
-          .eq('id', currentUser.id)
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error('Error fetching profile:', error);
-        }
-
-        setIsPro(profile?.pro_status || false);
-      }
+      await refreshUser();
       setLoading(false);
     };
 
     getSessionAndProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (_event === 'USER_UPDATED') {
+        return;
+      }
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -80,6 +89,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     isPro, // Expose pro status
     loading,
     signOut,
+    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

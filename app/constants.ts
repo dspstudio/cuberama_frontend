@@ -18,7 +18,7 @@ export interface PricingPlan {
   stripeLink: string;
 }
 
-export const cuberama3DAppLink = 'https://dsp-studio.ro/2123423/'
+export const cuberama3DAppLink = process.env.NEXT_PUBLIC_3D_APP_URL!;
 
 const proFeatures: Feature[] = [
   { text: '4K Resolution', tooltip: 'Export in stunning 4K UHD (3840x2160) for the highest possible quality.' },
@@ -87,6 +87,6 @@ export const PRICING_PLANS_EUR: PricingPlan[] = [
     features: proFeatures,
     cta: 'Start 14-Day Pro Trial',
     isPopular: true,
-    stripeLink: 'https://buy.stripe.com/test_aFaaEZfu6ciQ1xj8FY33W04?prefilled_promo_code=test50',
+    stripeLink: process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK!,
   },
 ];

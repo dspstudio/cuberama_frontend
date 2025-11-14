@@ -32,7 +32,7 @@ const handleCheckoutSessionCompleted = async (session: Stripe.Checkout.Session) 
         userId = data?.user?.id || null;
         // send supabses reset link for password
         console.log('Generating password reset link...');
-        const { error } = await supabaseAdmin.auth.resetPasswordForEmail(userEmail);
+        const { error } = await supabaseAdmin.auth.resetPasswordForEmail(userEmail, {redirectTo: `https://cuberama.app/update-password/`});
         if (error) {
           console.error('Error generating password reset link:', error);
         }
