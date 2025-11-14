@@ -41,7 +41,7 @@ export default function UpdatePasswordPage() {
 
   if (!session) {
     return (
-      <div className="container mx-auto px-4 py-8 text-white text-center">
+      <div className="container mx-auto px-4 py-8 mt-20 text-white text-center">
         <h1 className="text-3xl font-bold mb-4">Invalid or Expired Session</h1>
         <p className="mb-6">Your password reset link may have expired, or the session is invalid. Please request a new password reset email.</p>
         
@@ -70,7 +70,7 @@ export default function UpdatePasswordPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8 mt-20">
       <h1 className="text-3xl font-bold text-white text-center mb-8">Update Your Password</h1>
       <UpdatePasswordForm />
     </div>
