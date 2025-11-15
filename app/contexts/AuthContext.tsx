@@ -11,14 +11,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType>({
-  session: null,
-  user: null,
-  isPro: false,
-  loading: true,
-  signOut: async () => ({ error: null }),
-  refreshUser: async () => {},
-});
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -27,124 +20,67 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   const refreshUser = async () => {
-    // Only run on client side
-    if (typeof window === 'undefined') {
-      return;
-    }
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+    const currentUser = session?.user;
+    setUser(currentUser ?? null);
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      const currentUser = session?.user;
-      setUser(currentUser ?? null);
+    if (currentUser) {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('pro_status')
+        .eq('id', currentUser.id)
+        .single();
 
-      if (currentUser) {
-        try {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('pro_status')
-            .eq('id', currentUser.id)
-            .single();
-
-          if (error && error.code !== 'PGRST116') {
-            console.error('Error fetching profile:', error);
-          }
-
-          setIsPro(profile?.pro_status || false);
-        } catch (error) {
-          console.error('Error fetching profile in refreshUser:', error);
-          setIsPro(false);
-        }
-      } else {
-        setIsPro(false);
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
       }
-    } catch (error) {
-      console.error('Error getting session:', error);
-      setSession(null);
-      setUser(null);
+
+      setIsPro(profile?.pro_status || false);
+    } else {
       setIsPro(false);
     }
   };
 
   useEffect(() => {
-    // Only run on client side to avoid build-time errors
-    if (typeof window === 'undefined') {
-      setLoading(false);
-      return;
-    }
-
     const getSessionAndProfile = async () => {
-      try {
-        await refreshUser();
-      } catch (error) {
-        console.error('Error refreshing user:', error);
-      } finally {
-        setLoading(false);
-      }
+      await refreshUser();
+      setLoading(false);
     };
 
     getSessionAndProfile();
 
-    let subscription: { unsubscribe: () => void } | null = null;
-    
-    try {
-      const authStateChangeResult = supabase.auth.onAuthStateChange(async (_event, session) => {
-        if (_event === 'USER_UPDATED') {
-          return;
-        }
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          try {
-            const { data: profile, error } = await supabase
-              .from('profiles')
-              .select('pro_status')
-              .eq('id', session.user.id)
-              .single();
-            
-            if (error && error.code !== 'PGRST116') {
-              console.error('Error fetching profile on auth change:', error);
-            }
-            setIsPro(profile?.pro_status || false);
-          } catch (error) {
-            console.error('Error fetching profile:', error);
-            setIsPro(false);
-          }
-        } else {
-          setIsPro(false);
-        }
-      });
-      
-      // Extract subscription from the result
-      if (authStateChangeResult?.data?.subscription) {
-        subscription = authStateChangeResult.data.subscription;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (_event === 'USER_UPDATED') {
+        return;
       }
-    } catch (error) {
-      console.error('Error setting up auth state change listener:', error);
-    }
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('pro_status')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error fetching profile on auth change:', error);
+        }
+        setIsPro(profile?.pro_status || false);
+      } else {
+        setIsPro(false);
+      }
+    });
 
     return () => {
-      if (subscription?.unsubscribe) {
-        subscription.unsubscribe();
-      }
+      subscription?.unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
-    // Only run on client side
-    if (typeof window === 'undefined') {
-      return { error: null };
-    }
-
-    try {
-      const result = await supabase.auth.signOut();
-      setIsPro(false); // Reset pro status on sign out
-      return result;
-    } catch (error) {
-      console.error('Error signing out:', error);
-      setIsPro(false);
-      return { error: error as AuthError };
-    }
+    const result = await supabase.auth.signOut();
+    setIsPro(false); // Reset pro status on sign out
+    return result;
   };
 
   const value = {
@@ -160,5 +96,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 };
 
 export const useAuth = () => {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 };

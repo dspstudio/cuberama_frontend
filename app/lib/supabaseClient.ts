@@ -7,11 +7,4 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase URL and Anon Key are required.');
 }
 
-// Create a SSR-safe Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: typeof window !== 'undefined',
-    autoRefreshToken: typeof window !== 'undefined',
-    detectSessionInUrl: typeof window !== 'undefined',
-  },
-});
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
