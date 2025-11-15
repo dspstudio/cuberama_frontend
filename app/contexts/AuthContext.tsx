@@ -27,7 +27,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(true);
 
   const refreshUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError) {
+      console.error('Error getting session:', sessionError);
+      setSession(null);
+      setUser(null);
+      setIsPro(false);
+      return;
+    }
+    
+    const { session } = data;
     setSession(session);
     const currentUser = session?.user;
     setUser(currentUser ?? null);
@@ -57,7 +66,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     getSessionAndProfile();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (_event === 'USER_UPDATED') {
         return;
       }
@@ -80,7 +89,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     });
 
     return () => {
-      subscription?.unsubscribe();
+      authListener?.subscription?.unsubscribe();
     };
   }, []);
 
